@@ -1,29 +1,34 @@
 
 macro(CHECK_CXX_PREPROCESSOR VAR DIRECTIVE)
-	string(RANDOM DEFINED_KEY)
 	string(RANDOM UNDEFINED_KEY)
 
-	set(TMP_FILENAME "${CMAKE_CURRENT_BINARY_DIR}/CxxTmp/src.cpp")
+	set(TMP_FILENAME "${CMAKE_BINARY_DIR}${CMAKE_FILES_DIRECTORY}/CxxTmp/src.cpp")
 	SET(SRC "
-		#if ${DIRECTIVE}
-		#error ${DEFINED_KEY}
-		#else
+		#if !${DIRECTIVE}
 		#error ${UNDEFINED_KEY}
 		#endif
+
+		int main() { return 0; }
 		")
 	file(WRITE ${TMP_FILENAME} "${SRC}")
-	try_compile(RESULT_VAR
-		${CMAKE_CURRENT_BINARY_DIR}
+
+	if (NOT CMAKE_REQUIRED_QUIET)
+		message(STATUS "Performing Test ${DIRECTIVE}")
+	endif()
+	try_compile(${VAR}
+		${CMAKE_BINARY_DIR}
 		${TMP_FILENAME}
 		OUTPUT_VARIABLE OUTPUT_VAR
 	)
 
-	if(OUTPUT_VAR MATCHES ${DEFINED_KEY})
-		set(${VAR} ON)
-	elseif(OUTPUT_VAR MATCHES ${UNDEFINED_KEY})
-		set(${VAR} OFF)
+	if (${VAR})
+		if (NOT CMAKE_REQUIRED_QUIET)
+			message(STATUS "Performing Test ${DIRECTIVE} - Success")
+		endif()
 	else()
-		message(FATAL_ERROR "Can't determine if \"${DIRECTIVE}\" is true.")
+		if (NOT CMAKE_REQUIRED_QUIET)
+			message(STATUS "Performing Test ${DIRECTIVE} - Failed")
+		endif()
 	endif()
 endmacro()
 
